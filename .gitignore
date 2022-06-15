@@ -120,6 +120,7 @@ venv.bak/
 # mkdocs documentation
 /site
 /.idea
+/img_idcard
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -127,3 +128,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/img_idcard_mask
+/static_hrnet18s_ocr48_cocolvis/
