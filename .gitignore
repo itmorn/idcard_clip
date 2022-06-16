@@ -130,3 +130,5 @@ dmypy.json
 .pyre/
 /img_idcard_mask
 /static_hrnet18s_ocr48_cocolvis/
+/a_gen_mask/img_idcard_mask/
+/tst.py
