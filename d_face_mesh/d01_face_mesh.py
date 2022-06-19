@@ -1,51 +1,34 @@
 """
 整张大图中寻找人脸比较容易，但是直接寻找边缘比较难，同时人脸检测模型也可以粗略的过滤掉质量不好的图像
-可以通过人脸检测 对图像进行一下裁剪和调整方向
+可以通过人脸检测 对图像进行一下裁剪和调整方向，为有利于后续的图像标注
 """
+import numpy as np
 import cv2
-import mediapipe as mp
+import dlib
 
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-mp_face_mesh = mp.solutions.face_mesh
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor("shape_predictor_5_face_landmarks.dat")
 
-# For static images:
-IMAGE_FILES = ["../img_idcard/1254139.jpg","../img_idcard/1266201.jpg","../img_idcard/1313175.jpg"]
-drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
-with mp_face_mesh.FaceMesh(
-        static_image_mode=True,
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5) as face_mesh:
-    for idx, file in enumerate(IMAGE_FILES):
-        image = cv2.imread(file)
-        # Convert the BGR image to RGB before processing.
-        results = face_mesh.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+# cv2读取图像
+img = cv2.imread("20211213143306.png")
 
-        if not results.multi_face_landmarks:
-            continue
-        annotated_image = image.copy()
-        for face_landmarks in results.multi_face_landmarks:
-            print('face_landmarks:', face_landmarks)
-            mp_drawing.draw_landmarks(
-                image=annotated_image,
-                landmark_list=face_landmarks,
-                connections=mp_face_mesh.FACEMESH_TESSELATION,
-                landmark_drawing_spec=None,
-                connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_tesselation_style())
-            mp_drawing.draw_landmarks(
-                image=annotated_image,
-                landmark_list=face_landmarks,
-                connections=mp_face_mesh.FACEMESH_CONTOURS,
-                landmark_drawing_spec=None,
-                connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_contours_style())
-            mp_drawing.draw_landmarks(
-                image=annotated_image,
-                landmark_list=face_landmarks,
-                connections=mp_face_mesh.FACEMESH_IRISES,
-                landmark_drawing_spec=None,
-                connection_drawing_spec=mp_drawing_styles
-                    .get_default_face_mesh_iris_connections_style())
-        cv2.imwrite( str(idx) + '.png', annotated_image)
+# 取灰度
+img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+# 人脸数rects
+rects = detector(img_gray, 0)
+for i in range(len(rects)):
+    landmarks = np.matrix([[p.x, p.y] for p in predictor(img, rects[i]).parts()])
+    for idx, point in enumerate(landmarks):
+        # 68点的坐标
+        pos = (point[0, 0], point[0, 1])
+
+        # 利用cv2.circle给每个特征点画一个圈，共68个
+        cv2.circle(img, pos, 2, color=(0, 255, 0))
+        # 利用cv2.putText输出1-68
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(img, str(idx + 1), None, font, 0.8, (0, 0, 255), 1, cv2.LINE_AA)
+cv2.imwrite("/data/zhaoyichen/filename.png", img)
+# cv2.namedWindow("img", 2)
+# cv2.imshow("img", img)
+# cv2.waitKey(0)
