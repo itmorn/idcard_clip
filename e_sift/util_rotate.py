@@ -1,5 +1,6 @@
-import cv2
+import time
 import numpy as np
+import cv2
 
 
 def rotate(ps, m):
@@ -9,28 +10,47 @@ def rotate(ps, m):
     target_point = [[target_point[0][x], target_point[1][x]] for x in range(len(target_point[0]))]
     return target_point
 
-"""
-rotate_img_and_point函数：
 
-  功能 ：对输入的图片和坐标点进行相同的仿射变化，返回变化之后的图和坐标点
+def rotate_bound(image, angle):
+    # grab the dimensions of the image and then determine the
+    # center
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w / 2, h / 2)
 
-参数：
+    # grab the rotation matrix (applying the negative of the
+    # angle to rotate clockwise), then grab the sine and cosine
+    # (i.e., the rotation components of the matrix)
+    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
 
-   img ：输入图片 numpy数组
+    # compute the new bounding dimensions of the image
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
 
-points：需要计算的坐标点，[[x1,y1],[x2,y2]......]
+    # adjust the rotation matrix to take into account translation
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
 
-angle:旋转的度数 注意是角度，不是弧度
+    # perform the actual rotation and return the image
+    return cv2.warpAffine(image, M, (nW, nH)), M
 
-center_x:旋转的中心点的x坐标
 
-center_y：旋转的中心点的y坐标
+def calc_rotate_angle(best_dst):
+    p1 = best_dst[0] # 身份证左上角(x,y)
+    p2 = best_dst[-1] # 身份证右上角(x,y)
+    dx,  dy= p2 - p1
+    theta = dx / ((dx ** 2 + dy ** 2) ** 0.5)
+    theta2 = np.arccos(theta) / np.pi * 180
+    # 如果角度差不多等于0度或180度，就强制转为该度数，防止像素偏差
+    if theta2 < 5:
+        theta2 = 0
+    elif 85 < theta2 < 95:
+        theta2 = 90
+    elif theta2 > 175:
+        theta2 = 180
 
-resize_rate:缩放的比例，默认为1
-"""
-def rotate_img_and_point(img, points, angle, center_x_center_y, resize_rate=1.0):
-    h, w, c = img.shape
-    M = cv2.getRotationMatrix2D(center_x_center_y, angle, resize_rate)
-    res_img = cv2.warpAffine(img, M, (w, h))
-    out_points = rotate(points, M)
-    return res_img, out_points
+    if dy > 0:
+        # 需要顺时针旋转
+        theta2 = 360 - theta2
+    return theta2
