@@ -52,7 +52,7 @@ def calc_score_rect(dst):
 
 
 class UtilSift:
-    max_len = 2000  # 最长边转为该值
+    max_len = 1000  # 最长边转为该值
     dir_tmp = "pic_tmps/"
     lst_tmp_vec = get_lst_tmp_vec(dir_tmp)
 
@@ -75,7 +75,7 @@ class UtilSift:
             good = []
             # 舍弃大于0.7的匹配
             for m, n in matches:
-                if m.distance < 1 * n.distance:
+                if m.distance < 0.7 * n.distance:
                     good.append(m)
             if len(good) >= MIN_MATCH_COUNT:
                 # 获取关键点的坐标
@@ -104,7 +104,7 @@ class UtilSift:
                 continue
 
             # 如果没有足够多的匹配点，则停止
-            if num_match_point < 50:
+            if num_match_point < 10:
                 print(num_match_point)
                 continue
 

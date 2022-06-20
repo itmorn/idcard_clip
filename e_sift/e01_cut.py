@@ -65,10 +65,10 @@ if __name__ == '__main__':
     os.makedirs(dir_out_SIFT_fail)
 
     lst_file = [dir_in + i for i in os.listdir(dir_in) if ".jpg" in i]
-    is_show = True
+    is_show = False#True#
     for url_img in lst_file:
-        if "1360603" not in url_img:
-            continue
+        # if "1312915.jpg" not in url_img:
+        #     continue
 
         print(url_img)
         image_crop = cut_card(url_img=url_img)
