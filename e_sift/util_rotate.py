@@ -37,18 +37,19 @@ def rotate_bound(image, angle):
 
 
 def calc_rotate_angle(best_dst):
-    p1 = best_dst[0] # 身份证左上角(x,y)
-    p2 = best_dst[-1] # 身份证右上角(x,y)
-    dx,  dy= p2 - p1
+    p1 = best_dst[0]  # 身份证左上角(x,y)
+    p2 = best_dst[-1]  # 身份证右上角(x,y)
+    dx, dy = p2 - p1
     theta = dx / ((dx ** 2 + dy ** 2) ** 0.5)
     theta2 = np.arccos(theta) / np.pi * 180
     # 如果角度差不多等于0度或180度，就强制转为该度数，防止像素偏差
-    if theta2 < 5:
-        theta2 = 0
-    elif 85 < theta2 < 95:
-        theta2 = 90
-    elif theta2 > 175:
-        theta2 = 180
+    # dif_angle = 2
+    # if theta2 < dif_angle:
+    #     theta2 = 0
+    # elif 90 - dif_angle < theta2 < 90 + dif_angle:
+    #     theta2 = 90
+    # elif theta2 > 180 - dif_angle:
+    #     theta2 = 180
 
     if dy > 0:
         # 需要顺时针旋转
