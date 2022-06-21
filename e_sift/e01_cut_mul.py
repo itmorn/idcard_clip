@@ -66,7 +66,7 @@ def f(mydict,lst_file):
         if image_crop is None:
             shutil.copy(url_img, dir_out_SIFT_fail)
         else:
-            image_crop = cv2.resize(image_crop, (0, 0), fx=0.2, fy=0.2, interpolation=cv2.INTER_LINEAR)
+            # image_crop = cv2.resize(image_crop, (0, 0), fx=0.2, fy=0.2, interpolation=cv2.INTER_LINEAR)
             cv2.imwrite(dir_out + os.path.basename(url_img), image_crop)
 
 if __name__ == '__main__':

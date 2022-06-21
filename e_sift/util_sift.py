@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 
 sift = cv2.SIFT_create()
-MIN_MATCH_COUNT = 3  # 设置最低特征点匹配数量为10
+MIN_MATCH_COUNT = 0  # 设置最低特征点匹配数量为10
 
 # 创建设置FLANN匹配
 FLANN_INDEX_KDTREE = 0
@@ -43,8 +43,8 @@ def calc_score_rect(dst):
     len_up = np.sum((p1 - p4) ** 2) ** 0.5
     len_down = np.sum((p2 - p3) ** 2) ** 0.5
 
-    if np.min([len_left,len_right,len_up,len_down])<100:
-        return 1000
+    # if np.min([len_left,len_right,len_up,len_down])<100:
+    #     return 1000
 
     score = np.abs(len_left - len_right) / len_right + np.abs(len_up - len_down) / len_down
 
@@ -52,7 +52,7 @@ def calc_score_rect(dst):
 
 
 class UtilSift:
-    max_len = 1000  # 最长边转为该值
+    max_len = 2000  # 最长边转为该值
     dir_tmp = "pic_tmps/"
     lst_tmp_vec = get_lst_tmp_vec(dir_tmp)
 
@@ -66,6 +66,14 @@ class UtilSift:
 
         # 计算待检测的图像的SIFT向量
         kp2, des2 = sift.detectAndCompute(target, None)
+
+        # img_sift = np.copy(target)
+        # img_sift = cv2.cvtColor(img_sift, cv2.COLOR_GRAY2BGR)
+        #
+        # print(len(kp2))
+        # cv2.drawKeypoints(target, kp2, img_sift, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        # cv2.imwrite('res.png', img_sift)
+
         # 与每一个模板进行匹配
         best_score_rect = np.inf
         best_dst = None
@@ -75,7 +83,7 @@ class UtilSift:
             good = []
             # 舍弃大于0.7的匹配
             for m, n in matches:
-                if m.distance < 1.0 * n.distance:
+                if m.distance < 0.7 * n.distance:
                     good.append(m)
             if len(good) >= MIN_MATCH_COUNT:
                 # 获取关键点的坐标
@@ -107,7 +115,7 @@ class UtilSift:
                 continue
 
             # 如果没有足够多的匹配点，则停止
-            if num_match_point < 10:
+            if num_match_point < 1:
                 print(num_match_point)
                 continue
 
@@ -118,9 +126,9 @@ class UtilSift:
                 best_score_rect = score_rect
                 best_dst = dst
 
-        if best_score_rect > 0.5: #如果矩形分数很高 则认为匹配出错 放弃
-            print(best_score_rect)
-            return
+        # if best_score_rect > 0.5: #如果矩形分数很高 则认为匹配出错 放弃
+        #     print(best_score_rect)
+        #     return
 
         if best_dst is None: # 没有一个模板匹配到  也是匹配出错 放弃
             return

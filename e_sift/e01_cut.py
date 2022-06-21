@@ -69,7 +69,7 @@ if __name__ == '__main__':
     lst_file = [dir_in + i for i in os.listdir(dir_in) if ".jpg" in i]
     is_show = True#False#
     for url_img in lst_file:
-        if "1392733.jpg" not in url_img:
+        if "1391895.jpg" not in url_img:
             continue
 
         print(url_img)

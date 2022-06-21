@@ -133,3 +133,5 @@ dmypy.json
 /a_gen_mask/img_idcard_mask/
 /tst.py
 /history/
+/img_idcard_crop/
+/img_idcard_SIFT_fail/
