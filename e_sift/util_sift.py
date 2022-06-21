@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 
 sift = cv2.SIFT_create()
-MIN_MATCH_COUNT = 5  # 设置最低特征点匹配数量为10
+MIN_MATCH_COUNT = 3  # 设置最低特征点匹配数量为10
 
 # 创建设置FLANN匹配
 FLANN_INDEX_KDTREE = 0
@@ -43,7 +43,7 @@ def calc_score_rect(dst):
     len_up = np.sum((p1 - p4) ** 2) ** 0.5
     len_down = np.sum((p2 - p3) ** 2) ** 0.5
 
-    if np.min([len_left,len_right,len_up,len_down])<50:
+    if np.min([len_left,len_right,len_up,len_down])<100:
         return 1000
 
     score = np.abs(len_left - len_right) / len_right + np.abs(len_up - len_down) / len_down
@@ -75,7 +75,7 @@ class UtilSift:
             good = []
             # 舍弃大于0.7的匹配
             for m, n in matches:
-                if m.distance < 0.7 * n.distance:
+                if m.distance < 1.0 * n.distance:
                     good.append(m)
             if len(good) >= MIN_MATCH_COUNT:
                 # 获取关键点的坐标
@@ -84,6 +84,9 @@ class UtilSift:
                 # 计算变换矩阵和MASK
                 # 计算多个二维点对之间的最优单映射变换矩阵 H（3行x3列） ，使用最小均方误差或者RANSAC方法
                 M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                if M is None:
+                    print(111111111111)
+                    continue
                 matchesMask = mask.ravel().tolist()  # 先将mask变成一维，再将矩阵转化为列表
                 h, w = template.shape
                 # 使用得到的变换矩阵对原图像的四个角进行变换，获得在目标图像上对应的坐标
@@ -115,7 +118,7 @@ class UtilSift:
                 best_score_rect = score_rect
                 best_dst = dst
 
-        if best_score_rect > 0.2: #如果矩形分数很高 则认为匹配出错 放弃
+        if best_score_rect > 0.5: #如果矩形分数很高 则认为匹配出错 放弃
             print(best_score_rect)
             return
 

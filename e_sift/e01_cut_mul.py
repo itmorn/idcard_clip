@@ -12,7 +12,10 @@ import numpy as np
 from e_sift.util_sift import UtilSift
 
 from e_sift import util_rotate
-
+from multiprocessing import Process, Manager,Lock
+import os
+import math
+from time import sleep
 
 
 def cut_card(url_img):
@@ -50,9 +53,24 @@ def cut_card(url_img):
     image_crop = image_rotate[y_min:y_max + 1, x_min:x_max + 1, :]
     return image_crop
 
+def f(mydict,lst_file):
+    for url_img in lst_file:
+        # if "1395733.jpg" not in url_img:
+        #     continue
+        with lock:
+            mydict["num"]+=1
+            print(mydict["num"])
+
+        print(url_img)
+        image_crop = cut_card(url_img=url_img)
+        if image_crop is None:
+            shutil.copy(url_img, dir_out_SIFT_fail)
+        else:
+            image_crop = cv2.resize(image_crop, (0, 0), fx=0.2, fy=0.2, interpolation=cv2.INTER_LINEAR)
+            cv2.imwrite(dir_out + os.path.basename(url_img), image_crop)
 
 if __name__ == '__main__':
-    # dir_in = "../img_idcard/"
+    dir_in = "../img_idcard/"
     dir_in = "/data01/zhaoyichen/data/ec-gpaas-idcard-check/idcard/"
 
     dir_out = "img_idcard_crop/"
@@ -67,18 +85,29 @@ if __name__ == '__main__':
     os.makedirs(dir_out_SIFT_fail)
 
     lst_file = [dir_in + i for i in os.listdir(dir_in) if ".jpg" in i]
-    is_show = True#False#
-    for url_img in lst_file:
-        if "1392733.jpg" not in url_img:
-            continue
+    is_show = False#True#
 
-        print(url_img)
-        image_crop = cut_card(url_img=url_img)
-        if image_crop is None:
-            shutil.copy(url_img, dir_out_SIFT_fail)
-        else:
-            cv2.imwrite(dir_out + os.path.basename(url_img), image_crop)
+    manager = Manager()
+    lock = Lock()
+    mydict = manager.dict({"num": 0})
+    print(mydict)
 
-    # image_crop = cut_card(url_img='../img_idcard/1254139.jpg')
-    # image_crop = cut_card(url_img='../img_idcard/1254139.jpg')
-    # cv2.imwrite("4.png", image_crop)
+    core_num = 48
+    core_data_len = math.ceil(len(lst_file) / core_num)
+
+    lst_p = []
+    for i in range(core_num):
+        p = Process(target=f, args=(mydict, lst_file[i * core_data_len:i * core_data_len + core_data_len]))
+        p.start()
+        lst_p.append(p)
+    [p.join() for p in lst_p]
+    print(mydict)
+
+    os.system(f"tar -zcf res.tar.gz {dir_out} {dir_out_SIFT_fail}")
+
+
+
+
+# image_crop = cut_card(url_img='../img_idcard/1254139.jpg')
+# image_crop = cut_card(url_img='../img_idcard/1254139.jpg')
+# cv2.imwrite("4.png", image_crop)
